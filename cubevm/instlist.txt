@@ -1,0 +1,52 @@
+pushn <number>
+    Pushes a number to the stack.
+pushs <string>
+    Pushes a string to the stack.
+pushb <boolean>
+    Pushes a boolean to the stack.
+
+streg <id 0-9>
+    Pops the top value in the stack and stores it in a register with the given ID.
+stvar <name>
+    Pops the top value in the stack and stores it in a named variable.
+ldreg <id 0-9>
+    Pushes the value in the register with the given ID into the stack.
+ldvar <name>
+    Pushes the value in the variable with the given ID into the stack.
+
+pop
+    Pops the top value from the stack and sends it into the ether.
+
+add
+    Pops and adds the top two values in the stack together, pushing the result.
+sub
+    Pops and subtracts the top two values in the stack, pushing the result.
+    This is done in reverse order, so the current top stack value is on the right hand side.
+mul
+    Pops and multiplies the top two values in the stack together, pushing the result.
+div
+    Pops and divides the top two values in the stack, pushing the result.
+    This is done in reverse order, so the current top stack value is on the right hand side.
+
+scall <function name>
+    Calls a system built in function.
+fcall <function name>
+    Calls a defined function.
+    A function is any valid label which can be jumped to.
+    The only difference to a jump is that the current position is pushed to the stack.
+    Functions also must have a retrn instruction unless they wish to not work properly.
+
+brnch <label name>
+    Branches to a label.
+brzer <label name>
+    Pops the top value on the stack and branches to a label if it is 0/false.
+brone <label name>
+    Pops the top value on the stack and branches to a label if it is 1/true.
+brequ <label name>
+    Pops the top two values on the stack and branches to a label if they are equal to each other.
+retrn
+    Returns from a function. If no value is found on the stack, the program quits.
+
+cncat <num 1-inf>
+    Pops and concatenates num+1 values on the stack together and pushes the result as a string to the stack.
+    If 0 is provided, an error is thrown.
