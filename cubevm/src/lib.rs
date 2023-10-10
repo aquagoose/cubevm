@@ -26,19 +26,27 @@ pub enum Instruction {
 
     Div,
 
+    ToNum,
+
     SCall(String),
 
     FCall(String),
 
-    Brnch(String),
+    Brnch(usize),
 
-    Brzer(String),
+    Brzer(usize),
 
-    Brone(String),
+    Brone(usize),
 
-    Brequ(String),
+    Brequ(usize),
+
+    Brgrt(usize),
+
+    Brlst(usize),
 
     Retrn,
+
+    TermP,
 
     Cncat(usize)
 }
@@ -66,7 +74,10 @@ impl VmEngine {
     }
 
     pub fn execute(&mut self, instructions: &[Instruction]) {
-        for instruction in instructions {
+        let mut i = 0;
+        'main: while i < instructions.len() {
+            let instruction = &instructions[i];
+
             match instruction {
                 Instruction::PushN(num) => self.stack.push_back(StackValue::Number(*num)),
                 Instruction::PushS(string) => self.stack.push_back(StackValue::String(string.clone())),
@@ -103,6 +114,16 @@ impl VmEngine {
                     self.stack.push_back(StackValue::Number(lhs / rhs))
                 },
 
+                Instruction::ToNum => {
+                    let num = StackValue::Number(match self.stack.pop_back().unwrap() {
+                        StackValue::Number(num) => num,
+                        StackValue::String(string) => string.parse::<f64>().unwrap(),
+                        StackValue::Bool(b) => b.into()
+                    });
+
+                    self.stack.push_back(num);
+                }
+
                 Instruction::SCall(name) => {
                     if let Some(value) = self.functions.get(name).unwrap()(&mut self.stack) {
                         self.stack.push_back(value);
@@ -111,11 +132,58 @@ impl VmEngine {
 
                 Instruction::FCall(name) => todo!(),
 
-                Instruction::Brnch(_) => todo!(),
-                Instruction::Brzer(_) => todo!(),
-                Instruction::Brone(_) => todo!(),
-                Instruction::Brequ(_) => todo!(),
+                Instruction::Brnch(line) => {
+                    i = *line;
+                    continue;
+                },
+
+                Instruction::Brzer(line) => {
+                    match self.stack.pop_back().unwrap() {
+                        StackValue::Number(num) => if num == 0.0 { i = *line },
+                        StackValue::Bool(b) => if !b { i = *line },
+                        _ => panic!("Number or boolean expected.")
+                    };
+
+                    continue;
+                },
+
+                Instruction::Brone(line) => {
+                    match self.stack.pop_back().unwrap() {
+                        StackValue::Number(num) => if num == 1.0 { i = *line },
+                        StackValue::Bool(b) => if b { i = *line },
+                        _ => panic!("Number or boolean expected.")
+                    };
+
+                    continue;
+                },
+
+                Instruction::Brequ(line) => {
+                    if self.stack.pop_back().unwrap() == self.stack.pop_back().unwrap() {
+                        i = *line;
+                        continue;
+                    }
+                },
+
+                Instruction::Brgrt(line) => {
+                    let (lhs, rhs) = self.pop_two_numbers();
+                    if lhs > rhs {
+                        i = *line;
+                        continue;
+                    }
+                },
+
+                Instruction::Brlst(line) => {
+                    let (lhs, rhs) = self.pop_two_numbers();
+                    if lhs < rhs {
+                        i = *line;
+                        continue;
+                    }
+                }
+
                 Instruction::Retrn => todo!(),
+
+                Instruction::TermP => break 'main,
+
                 Instruction::Cncat(num) => {
                     let mut text = String::new();
 
@@ -130,6 +198,8 @@ impl VmEngine {
                     self.stack.push_back(StackValue::String(text));
                 }
             }
+
+            i += 1;
         }
     }
 
